@@ -3,7 +3,7 @@ using Test, Prony
 
 @testset "Prony" begin
     for N = 50:50:200
-        x = collect(LinRange(0, 2, 50))
+        x = collect(LinRange(0, 4, 50))
         y = @. exp(-x*2)*cos(3x)+sin(2x)
         f  = prony(x,y)
         ynew = f.(x)
