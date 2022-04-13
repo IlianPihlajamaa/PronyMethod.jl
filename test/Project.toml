@@ -1,3 +1,4 @@
 [deps]
+Prony = "c74e20f0-979d-4342-9c1f-74e891e8437c"
 SpecialFunctions = "276daf66-3868-5448-9aa4-cd146d93841b"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
