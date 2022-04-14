@@ -1,6 +1,6 @@
 
 # Prony.jl
-Julia package for oscillating exponential fitting.
+Pure Julia package for oscillating exponential fitting.
 
 [![Build status (Github Actions)](https://github.com/IlianPihlajamaa/Prony.jl/workflows/CI/badge.svg)](https://github.com/IlianPihlajamaa/Prony.jl/actions)
 [![codecov.io](http://codecov.io/github/IlianPihlajamaa/Prony.jl/coverage.svg?branch=main)](http://codecov.io/github/IlianPihlajamaa/Prony.jl?branch=main)
@@ -11,7 +11,7 @@ Fernández Rodríguez, A., de Santiago Rodrigo, L., López Guillén, E. et al. C
 
 https://en.wikipedia.org/wiki/Prony%27s_method
 
-The package exports an implementation of the standard Prony interpolation `prony(x, y)`. Additionally it provides a simple approximate Prony's method `prony(x, y, N)` that is better suited to noisy data. Here `x` is an equidistant sample grid, `y` is the sampled data, and `N` is the number of oscillating exponentials that are used to approximate `y`. The approximate method `prony(x, y, N)` keeps only the `N` exponentials with largest weight in the expansion.
+The package exports an implementation of the standard Prony interpolation `prony(x, y)`. Additionally it provides a simple approximate Prony's method `prony(x, y, N)` that is better suited to noisy data. Here `x` is an equidistant sample grid, `y` is the sampled data, and `N` is the number of oscillating exponentials that are used to approximate `y`. The approximate method `prony(x, y, N)` keeps only the `N` exponentials with largest absolute amplitudes in the expansion.
 
 It tries to find exponential amplitudes `A_j` and bases `B_j`, such that
 
