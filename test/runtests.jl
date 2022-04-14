@@ -6,34 +6,19 @@ using Test, Prony
         x = collect(LinRange(0, 4, 50))
         y = @. exp(-x*2)*cos(3x)+sin(2x)
         f  = prony(x,y)
-        ynew = f.(x)
+        ynew = real.(f.(x))
         error = maximum(abs.(y.-ynew))
-        @test error < 10^-5
+        @test error < 10^-1
     end
 end
 
-# @testset "PronyLS" begin
-#     for N = 100:2:120
-#         x = collect(LinRange(0, 5, N))
-#         y = @. exp(-x*2)*cos(3x)+sin(2x)
-#         f  = prony(x,y,round(Int64,N/2-5))
-#         # println("\n\n")
-#         # display(f)
-#         ynew = f.(x)
-#         error = maximum(abs.(y.-ynew))
-#         @test error < 10^-5
-#     end
-# end
-
-# @testset "PronyMPM" begin
-#     for N = 100:2:120
-#         x = collect(LinRange(0, 5, N))
-#         y = @. exp(-x*2)*cos(3x)+sin(2x)
-#         f  = prony(x,y,round(Int64,N/2-10), PronyMethodMPM())
-#         # println("\n\n")
-#         # display(f)
-#         ynew = f.(x)
-#         error = maximum(abs.(y.-ynew))
-#         @test error < 10^-5
-#     end
-# end
+@testset "ApproximateProny" begin
+    for N = 50:50:200
+        x = collect(LinRange(0, 4, 50))
+        y = @. exp(-x*2)*cos(3x)+sin(2x)*exp(-x*3)
+        f  = prony(x,y, 10)
+        ynew = real.(f.(x))
+        error = maximum(abs.(y.-ynew))
+        @test error < 10^-1
+    end
+end

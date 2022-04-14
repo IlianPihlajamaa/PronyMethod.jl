@@ -3,7 +3,7 @@ module Prony
 using PolynomialRoots, LinearAlgebra
 
 export prony
-export PronyMethod, PronyMethodLS, PronyMethodMPM
+export PronyMethod, ApproximatePronyMethod
 
 struct DampedCosineFit{T}
     p::Int64
@@ -14,17 +14,20 @@ struct DampedCosineFit{T}
 end
 
 struct PronyMethod end
-struct PronyMethodLS end
-struct PronyMethodMPM end
+struct ApproximatePronyMethod 
+    decay::Bool
+end
+
+ApproximatePronyMethod() = ApproximatePronyMethod(false)
 
 function (fit::DampedCosineFit{T})(x::T) where T
     xmin = fit.x_array[1]
     xmax = fit.x_array[end]
     N = length(fit.x_array)
     indx = (x-xmin)/(xmax-xmin)*(N-1)
-    result = zero(Complex{T})
+    result = zero(T)
     for i = 1:round(Int64,fit.p)
-        result += fit.amplitudes[i] * fit.bases[i]^indx
+        result += real.(fit.amplitudes[i] * fit.bases[i]^indx)
     end
     return result
 end
@@ -61,16 +64,15 @@ function is_equidistant(x)
 end
 
 function transposed_vandermonde(z, length_vander)
-    p = length(z)
-    vandermonde = zeros(eltype(z), length_vander, p)
-    for row = 1:p
-        for column = 1:length_vander
+    N = length(z)
+    vandermonde = zeros(eltype(z), length_vander, N)
+    for row in axes(vandermonde, 2)
+        for column in axes(vandermonde, 1)
             vandermonde[column, row] = z[row]^(column-1)
         end
     end
     return vandermonde
 end
-
 
 function find_coefficients(y, p)
     N = length(y)
@@ -88,9 +90,6 @@ function check_args(x, y, p)
     if length(y) != N
         error("length of x must equal that of y.")
     end
-    if isodd(N)
-        error("The number of data points must be even.")
-    end
     if 2p > N
         error("2p must be smaller than the number of data points.")
     end
@@ -102,57 +101,13 @@ function check_args(x, y, p)
     end
 end
 
-# function least_squares(A::AbstractMatrix, b::AbstractVector)
-#     @assert size(A, 1) == length(b)
-#     N = size(A, 2)
-#     C = [A b]
-#     _, _, V = svd(C)
-#     Vsub = V[1:N, 1+N:end]
-#     Vlast = V[end, end]
-#     if Vlast == 0 
-#         error("Least squares not converged")
-#     end
-#     return -Vsub[:,1]/Vlast
-# end
-
-# function hankel(y, p)
-#     N = length(y)
-#     hank = zeros(eltype(y), N-p, p+1)
-#     for row in axes(hank,2)
-#         for col in axes(hank, 1)
-#             hank[col, row] = y[(col-1)+(row-1)+1]
-#         end
-#     end
-#     return hank
-# end
-
-# function find_amplitudes(bases, y, ::PronyMethodLS)
-#     N = length(y)
-#     vandermonde_matrix = transposed_vandermonde(bases, N)
-#     return least_squares(vandermonde_matrix, y[1:size(vandermonde_matrix,1)])
-# end
-
 function find_amplitudes(bases, y, ::PronyMethod)
     p = length(bases)
     vandermonde_matrix = transposed_vandermonde(bases, p)
     return vandermonde_matrix\y[1:size(vandermonde_matrix,1)]
 end
 
-# function find_amplitudes(bases, y, ::PronyMethodMPM)
-#     N = length(y)
-#     vandermonde_matrix = transposed_vandermonde(bases, N)
-#     return vandermonde_matrix\y
-# end
-
-# function find_bases(y, p, ::PronyMethodMPM)
-#     Y = hankel(y, p)
-#     Y1 = Y[:, 1:end-1]
-#     Y2 = Y[:, 2:end]
-#     bases = eigvals(pinv(Y1)*Y2)
-#     return bases
-# end
-
-function find_bases(y, p, ::Any)
+function find_bases(y, p, ::PronyMethod)
     coeffictients = find_coefficients(y, p)
     reverse!(coeffictients)
     push!(coeffictients, one(eltype(coeffictients)))
@@ -160,21 +115,11 @@ function find_bases(y, p, ::Any)
     return polynomialroots
 end
 
-# function prony(x::AbstractVector, y::AbstractVector, p::Integer, ::PronyMethodMPM)
-#     check_args(x, y, p)
-#     bases = find_bases(y, p, PronyMethodMPM())
-#     amplitudes = find_amplitudes(bases, y, PronyMethodMPM())
-#     return DampedCosineFit(p, x, y, bases, amplitudes)
-# end
-
-# function prony(x::AbstractVector, y::AbstractVector, p::Integer, ::PronyMethodLS)
-#     check_args(x, y, p)
-#     bases = find_bases(y, p, PronyMethodLS())
-#     amplitudes = find_amplitudes(bases, y, PronyMethodLS())
-#     return DampedCosineFit(p, x, y, bases, amplitudes)
-# end
-
 function prony(x::AbstractVector, y::AbstractVector, ::PronyMethod)
+    if isodd(length(x))
+        pop!(x)
+        pop!(y)
+    end
     p = round(Int, length(x)/2)
     check_args(x, y, p)
     bases = find_bases(y, p, PronyMethod())
@@ -182,12 +127,50 @@ function prony(x::AbstractVector, y::AbstractVector, ::PronyMethod)
     return DampedCosineFit(p, x, y, bases, amplitudes)
 end
 
-function prony(x::AbstractVector, y::AbstractVector, p::Integer)
-    return prony(x, y, p, PronyMethodLS())
+function prony(x::AbstractVector, y::AbstractVector, M::Int64, m::ApproximatePronyMethod)
+    if !(eltype(y) <: Real)
+        error("ApproximateProny is not implemented for complex functions")
+    end
+    if isodd(length(x))
+        pop!(x)
+        pop!(y)
+    end
+    N = round(Int, (length(x))/2)
+    if M > N
+        error("Number of requested functions is too large. Must be smaller than N, where 2N+1 is the number of data-points")
+    end
+
+    bases = find_bases(y, N, PronyMethod())
+    amplitudes = find_amplitudes(bases, y, PronyMethod())
+
+    bases[isnan.(amplitudes)] .= 0.0
+    amplitudes[isnan.(amplitudes)] .= 0.0
+    if m.decay == true
+        amplitudes[abs.(bases) .> 1] .= 0.0
+    end
+
+    sortedindx = sortperm(abs.(amplitudes), rev=true)[1:M]
+    bases = bases[sortedindx]
+    amplitudes = amplitudes[sortedindx]
+
+    return DampedCosineFit(length(bases), x, y, bases, amplitudes)
+end
+
+
+function prony(x::AbstractVector, y::AbstractVector, N::Int64; decay=false)
+    return prony(x, y, N, ApproximatePronyMethod(decay))
+end
+
+function prony(x::AbstractRange, y::AbstractVector, N::Int64; decay=false)
+    return prony(collect(x), y, N, ApproximatePronyMethod(decay))
 end
 
 function prony(x::AbstractVector, y::AbstractVector)
     return prony(x, y, PronyMethod())
+end
+
+function prony(x::AbstractRange, y::AbstractVector)
+    return prony(collect(x), y, PronyMethod())
 end
 
 end # module
