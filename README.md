@@ -1,4 +1,3 @@
-<script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=default"></script>
 
 # Prony.jl
 Julia package for oscillating exponential fitting.
@@ -15,8 +14,7 @@ https://en.wikipedia.org/wiki/Prony%27s_method
 The package exports an implementation of the standard Prony interpolation `prony(x, y)`, and a simple approximate Prony's method `prony(x, y, N)` that is better applicable to noisy data. Here `x` is an equidistant sample grid, `y` is the sampled data, and `N` is the number of oscillating exponentials that are used. The approximate method `prony(x, y, N)` keeps only the `N` exponentials with largest weight in the expansion.
 
 It tries to find exponential amplitudes `A_j` and bases `B_j`, such that
-$$y_i\approx \sum_{j=0}^{N-1} A_j*B_j^i$$
-
+<img src="https://render.githubusercontent.com/render/math?math=y_i\approx \sum_{j=0}^{N-1} A_j*B_j^i">
 Note that these methods are unstable if the number of datapoints is very large.
 
 Usage:
