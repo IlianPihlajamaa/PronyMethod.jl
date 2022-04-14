@@ -15,7 +15,7 @@ The package exports an implementation of the standard Prony interpolation `prony
 
 It tries to find exponential amplitudes `A_j` and bases `B_j`, such that
 
-<img src="https://render.githubusercontent.com/render/math?math=y_i\approx \sum_{j=1}^{N} A_jB_j^(i-1)">
+<img src="https://render.githubusercontent.com/render/math?math=y_i\approx \sum_{j=1}^{N} A_jB_j^{(i-1)}">
 
 Note that these methods are unstable if the number of datapoints is very large.
 
@@ -56,6 +56,6 @@ plot!(p, xnew, approx_pronyfunc.(xnew), label="prony(x,y,5)")
 
 ![Example Plot](prony.png)
 
-The weigths and bases can be extracted with `pronyfunc.amplitudes` and `pronyfunc.bases`.
+The amplitudes and bases can be extracted with `pronyfunc.amplitudes` and `pronyfunc.bases`.
 
 Issues and PRs are welcome.
