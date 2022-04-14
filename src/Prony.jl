@@ -102,35 +102,35 @@ function check_args(x, y, p)
     end
 end
 
-function least_squares(A::AbstractMatrix, b::AbstractVector)
-    @assert size(A, 1) == length(b)
-    N = size(A, 2)
-    C = [A b]
-    _, _, V = svd(C)
-    Vsub = V[1:N, 1+N:end]
-    Vlast = V[end, end]
-    if Vlast == 0 
-        error("Least squares not converged")
-    end
-    return -Vsub[:,1]/Vlast
-end
+# function least_squares(A::AbstractMatrix, b::AbstractVector)
+#     @assert size(A, 1) == length(b)
+#     N = size(A, 2)
+#     C = [A b]
+#     _, _, V = svd(C)
+#     Vsub = V[1:N, 1+N:end]
+#     Vlast = V[end, end]
+#     if Vlast == 0 
+#         error("Least squares not converged")
+#     end
+#     return -Vsub[:,1]/Vlast
+# end
 
-function hankel(y, p)
-    N = length(y)
-    hank = zeros(eltype(y), N-p, p+1)
-    for row in axes(hank,2)
-        for col in axes(hank, 1)
-            hank[col, row] = y[(col-1)+(row-1)+1]
-        end
-    end
-    return hank
-end
+# function hankel(y, p)
+#     N = length(y)
+#     hank = zeros(eltype(y), N-p, p+1)
+#     for row in axes(hank,2)
+#         for col in axes(hank, 1)
+#             hank[col, row] = y[(col-1)+(row-1)+1]
+#         end
+#     end
+#     return hank
+# end
 
-function find_amplitudes(bases, y, ::PronyMethodLS)
-    N = length(y)
-    vandermonde_matrix = transposed_vandermonde(bases, N)
-    return least_squares(vandermonde_matrix, y[1:size(vandermonde_matrix,1)])
-end
+# function find_amplitudes(bases, y, ::PronyMethodLS)
+#     N = length(y)
+#     vandermonde_matrix = transposed_vandermonde(bases, N)
+#     return least_squares(vandermonde_matrix, y[1:size(vandermonde_matrix,1)])
+# end
 
 function find_amplitudes(bases, y, ::PronyMethod)
     p = length(bases)
@@ -138,19 +138,19 @@ function find_amplitudes(bases, y, ::PronyMethod)
     return vandermonde_matrix\y[1:size(vandermonde_matrix,1)]
 end
 
-function find_amplitudes(bases, y, ::PronyMethodMPM)
-    N = length(y)
-    vandermonde_matrix = transposed_vandermonde(bases, N)
-    return vandermonde_matrix\y
-end
+# function find_amplitudes(bases, y, ::PronyMethodMPM)
+#     N = length(y)
+#     vandermonde_matrix = transposed_vandermonde(bases, N)
+#     return vandermonde_matrix\y
+# end
 
-function find_bases(y, p, ::PronyMethodMPM)
-    Y = hankel(y, p)
-    Y1 = Y[:, 1:end-1]
-    Y2 = Y[:, 2:end]
-    bases = eigvals(pinv(Y1)*Y2)
-    return bases
-end
+# function find_bases(y, p, ::PronyMethodMPM)
+#     Y = hankel(y, p)
+#     Y1 = Y[:, 1:end-1]
+#     Y2 = Y[:, 2:end]
+#     bases = eigvals(pinv(Y1)*Y2)
+#     return bases
+# end
 
 function find_bases(y, p, ::Any)
     coeffictients = find_coefficients(y, p)
@@ -160,19 +160,19 @@ function find_bases(y, p, ::Any)
     return polynomialroots
 end
 
-function prony(x::AbstractVector, y::AbstractVector, p::Integer, ::PronyMethodMPM)
-    check_args(x, y, p)
-    bases = find_bases(y, p, PronyMethodMPM())
-    amplitudes = find_amplitudes(bases, y, PronyMethodMPM())
-    return DampedCosineFit(p, x, y, bases, amplitudes)
-end
+# function prony(x::AbstractVector, y::AbstractVector, p::Integer, ::PronyMethodMPM)
+#     check_args(x, y, p)
+#     bases = find_bases(y, p, PronyMethodMPM())
+#     amplitudes = find_amplitudes(bases, y, PronyMethodMPM())
+#     return DampedCosineFit(p, x, y, bases, amplitudes)
+# end
 
-function prony(x::AbstractVector, y::AbstractVector, p::Integer, ::PronyMethodLS)
-    check_args(x, y, p)
-    bases = find_bases(y, p, PronyMethodLS())
-    amplitudes = find_amplitudes(bases, y, PronyMethodLS())
-    return DampedCosineFit(p, x, y, bases, amplitudes)
-end
+# function prony(x::AbstractVector, y::AbstractVector, p::Integer, ::PronyMethodLS)
+#     check_args(x, y, p)
+#     bases = find_bases(y, p, PronyMethodLS())
+#     amplitudes = find_amplitudes(bases, y, PronyMethodLS())
+#     return DampedCosineFit(p, x, y, bases, amplitudes)
+# end
 
 function prony(x::AbstractVector, y::AbstractVector, ::PronyMethod)
     p = round(Int, length(x)/2)
