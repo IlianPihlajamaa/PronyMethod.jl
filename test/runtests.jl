@@ -6,6 +6,8 @@ using Test, Prony
         x = collect(LinRange(0, 4, 50))
         y = @. exp(-x*2)*cos(3x)+sin(2x)
         f  = prony(x,y)
+        println("\n\n")
+        display(f)
         ynew = f.(x)
         error = maximum(abs.(y.-ynew))
         @test error < 10^-5
@@ -17,6 +19,8 @@ end
         x = collect(LinRange(0, 5, N))
         y = @. exp(-x*2)*cos(3x)+sin(2x)
         f  = prony(x,y,round(Int64,N/2-2))
+        println("\n\n")
+        display(f)
         ynew = f.(x)
         error = maximum(abs.(y.-ynew))
         @test error < 10^-5
@@ -28,6 +32,8 @@ end
         x = collect(LinRange(0, 5, N))
         y = @. exp(-x*2)*cos(3x)+sin(2x)
         f  = prony(x,y,round(Int64,N/2-10), PronyMethodMPM())
+        println("\n\n")
+        display(f)
         ynew = f.(x)
         error = maximum(abs.(y.-ynew))
         @test error < 10^-5
