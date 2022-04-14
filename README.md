@@ -23,7 +23,7 @@ Usage:
 ```
 using Prony, Plots, SpecialFunctions
 
-x = LinRange(0, 5, 100)
+x = LinRange(0, 5, 50)
 y = @. besselj0.(π*x)+0.1*randn() 
 
 pronyfunc = prony(x, y)
@@ -32,7 +32,7 @@ approx_pronyfunc = prony(x, y, 5)
 p = scatter(x, y, label="data")
 xnew = LinRange(0, 5, 1000)
 plot!(p, xnew, pronyfunc.(xnew), label="prony(x,y)")
-plot!(p, xnew, approx_pronyfunc.(xnew), label="approx_prony(x,y)")
+plot!(p, xnew, approx_pronyfunc.(xnew), label="prony(x,y,5)")
 ```
 
 ![Example Plot](prony.png)
