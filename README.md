@@ -1,6 +1,6 @@
 
 # Prony.jl
-Pure Julia package for oscillating exponential fitting.
+Pure Julia package for oscillating exponential fitting. Use with caution. The numerics are badly conditioned if the number of points is large. Always check the results.
 
 [![Build status (Github Actions)](https://github.com/IlianPihlajamaa/Prony.jl/workflows/CI/badge.svg)](https://github.com/IlianPihlajamaa/Prony.jl/actions)
 [![codecov.io](http://codecov.io/github/IlianPihlajamaa/Prony.jl/coverage.svg?branch=main)](http://codecov.io/github/IlianPihlajamaa/Prony.jl?branch=main)
