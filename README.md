@@ -14,6 +14,14 @@ It tries to find exponential amplitudes `A_j` and bases `B_j`, such that
 
 $$y_i\approx \sum_{j=1}^{N} A_jB_j^{(i-1)}$$
 
+The resulting fit obtained is then of the form:
+
+$$y\approx\sum_{j=1}^{N} A_jB_j^{(N-1)(x-x_0)/(x_M-x_0)}$$
+
+Or in terms of decaying exponentials:
+
+$$y\approx\sum_{j=1}^N A_j \exp\left\{(x-x_0)\left[\frac{N-1}{x_M-x_0}\ln(B)\right]\right\}$$
+
 Note that these methods are unstable if the number of datapoints is very large.
 
 Usage:
