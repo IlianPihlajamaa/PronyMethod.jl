@@ -20,7 +20,7 @@ $$y\approx\sum_{j=1}^{N} A_jB_j^{(N-1)(x-x_0)/(x_M-x_0)}$$
 
 Or in terms of decaying exponentials:
 
-$$y\approx\sum_{j=1}^N A_j \exp\left\{(x-x_0)\left[\frac{N-1}{x_M-x_0}\ln(B)\right]\right\}$$
+$$y\approx\sum_{j=1}^N A_j \exp\left((x-x_0)\left[\frac{N-1}{x_M-x_0}\ln(B)\right]\right)$$
 
 Note that these methods are unstable if the number of datapoints is very large.
 
