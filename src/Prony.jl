@@ -31,7 +31,7 @@ end
 function exponentialVersion(fit::DampedCosineFit{T}) where T
     N = length(fit.x_array)
     Δ = fit.x_array[end] - fit.x_array[1]
-    exponents = ln.(fit.bases) * (N-1)/Δ
+    exponents = log.(fit.bases) * (N-1)/Δ
     return ComplexExponentialFit(fit.p, fit.x_array, fit.y_array, exponents, fit.amplitudes)
 end
 
@@ -50,6 +50,18 @@ function (fit::DampedCosineFit{T})(x::T) where T
     result = zero(T)
     for i = 1:round(Int64,fit.p)
         result += (fit.amplitudes[i] * fit.bases[i]^indx)
+    end
+    return result
+end
+
+function (fit::ComplexExponentialFit{T})(x::T) where T
+    xmin = fit.x_array[1]
+    xmax = fit.x_array[end]
+    N = length(fit.x_array)
+    indx = (x-xmin)
+    result = zero(T)
+    for i = 1:round(Int64,fit.p)
+        result += (fit.amplitudes[i] * exp(fit.exponents[i]*indx))
     end
     return result
 end
