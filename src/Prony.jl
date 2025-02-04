@@ -161,8 +161,8 @@ function prony(x::AbstractVector, y::AbstractVector, ::PronyMethod; exponentialM
     amplitudes = find_amplitudes(bases, y, PronyMethod())
 
     exponentialMode ?
-        (return exponentialVersion(DampedCosineFit(p, x, y, bases, amplitudes))) :
-        (return DampedCosineFit(p, x, y, bases, amplitudes))
+        (return exponentialVersion(DampedCosineFit(p, x, Complex.(y), bases, amplitudes))) :
+        (return DampedCosineFit(p, x, Complex.(y), bases, amplitudes))
 end
 
 # Prony method with M exponentials
@@ -190,8 +190,8 @@ function prony(x::AbstractVector, y::AbstractVector, M::Int64, m::ApproximatePro
     amplitudes = amplitudes[sortedindx]
 
     exponentialMode ? 
-        (return exponentialVersion(DampedCosineFit(length(bases), x, y, bases, amplitudes))) :
-        (return DampedCosineFit(length(bases), x, y, bases, amplitudes))
+        (return exponentialVersion(DampedCosineFit(length(bases), x, Complex.(y), bases, amplitudes))) :
+        (return DampedCosineFit(length(bases), x, Complex.(y), bases, amplitudes))
 end
 
 
