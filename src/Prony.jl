@@ -5,12 +5,23 @@ using PolynomialRoots, LinearAlgebra
 export prony
 export PronyMethod, ApproximatePronyMethod
 
-struct DampedCosineFit{T}
+# Fitting object returned by prony: 
+struct DampedCosineFit{T} 
     p::Int64
     x_array::Array{T,1}
-    y_array::Array{T,1}
+    y_array::Array{Complex{T},1}
+
+    # y = A*B^{ (x-x0)(N-1)/(xmax-xmin) }
     bases::Array{Complex{T}, 1}
     amplitudes::Array{Complex{T}, 1}
+    
+    # y = A*exp(-λ(t-t0))
+    exponents::Array{Complex{T}, 1}
+
+    function DampedCosineFit(p::Int64, x_array::Array{T,1}, y_array::Array{Complex{T},1}, bases::Array{Complex{T}, 1}, amplitudes::Array{Complex{T}, 1}) where T
+        exponents::Array{Complex{T},1} = log.(bases) * (length(x_array)-1)/(x_array[end]-x_array[1])
+        new{T}(p, x_array, y_array, bases, amplitudes, exponents)
+    end
 end
 
 struct PronyMethod end
@@ -27,12 +38,12 @@ function (fit::DampedCosineFit{T})(x::T) where T
     indx = (x-xmin)/(xmax-xmin)*(N-1)
     result = zero(T)
     for i = 1:round(Int64,fit.p)
-        result += real.(fit.amplitudes[i] * fit.bases[i]^indx)
+        result += (fit.amplitudes[i] * fit.bases[i]^indx)
     end
     return result
 end
 
-function construct_prediction_matrix(y, p)
+function construct_prediction_matrix(y, p)  # H_ij = y_{i+j+1}
     N = length(y)
     prediction_matrix = zeros(eltype(y), N-p, p)
     for row = 1:p
@@ -52,7 +63,7 @@ function construct_observation_vector(y, p)
     return observation_vector
 end
 
-function is_equidistant(x)
+function is_equidistant(x) # x input must be equidistant or code returns error
     N = length(x)
     dx = x[2] - x[1]
     for i = 2:N-1
@@ -115,6 +126,7 @@ function find_bases(y, p, ::PronyMethod)
     return polynomialroots
 end
 
+# Prony method with length(x) exponentials
 function prony(x::AbstractVector, y::AbstractVector, ::PronyMethod)
     if isodd(length(x))
         pop!(x)
@@ -124,13 +136,11 @@ function prony(x::AbstractVector, y::AbstractVector, ::PronyMethod)
     check_args(x, y, p)
     bases = find_bases(y, p, PronyMethod())
     amplitudes = find_amplitudes(bases, y, PronyMethod())
-    return DampedCosineFit(p, x, y, bases, amplitudes)
+    return DampedCosineFit(p, x, Complex.(y), bases, amplitudes)
 end
 
+# Prony method with M exponentials
 function prony(x::AbstractVector, y::AbstractVector, M::Int64, m::ApproximatePronyMethod)
-    if !(eltype(y) <: Real)
-        error("ApproximateProny is not implemented for complex functions")
-    end
     if isodd(length(x))
         pop!(x)
         pop!(y)
@@ -153,7 +163,7 @@ function prony(x::AbstractVector, y::AbstractVector, M::Int64, m::ApproximatePro
     bases = bases[sortedindx]
     amplitudes = amplitudes[sortedindx]
 
-    return DampedCosineFit(length(bases), x, y, bases, amplitudes)
+    return DampedCosineFit(length(bases), x, Complex.(y), bases, amplitudes)
 end
 
 
