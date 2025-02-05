@@ -14,25 +14,14 @@ struct DampedCosineFit{T}
     # y = A*B^{ (x-x0)(N-1)/(xmax-xmin) }
     bases::Array{Complex{T}, 1}
     amplitudes::Array{Complex{T}, 1}
-end
-
-# Exponential version (equivalent)
-struct ComplexExponentialFit{T}
-    p::Int64
-    x_array::Array{T,1}
-    y_array::Array{Complex{T},1}
-
-    # y = A*exp(λ*(x-x0))
+    
+    # y = A*exp(-λ(t-t0))
     exponents::Array{Complex{T}, 1}
-    amplitudes::Array{Complex{T}, 1}
-end
 
-# Convert Damped Cosine to Exponential
-function exponentialVersion(fit::DampedCosineFit{T}) where T
-    N = length(fit.x_array)
-    Δ = fit.x_array[end] - fit.x_array[1]
-    exponents = log.(fit.bases) * (N-1)/Δ
-    return ComplexExponentialFit(fit.p, fit.x_array, fit.y_array, exponents, fit.amplitudes)
+    function DampedCosineFit(p::Int64, x_array::Array{T,1}, y_array::Array{Complex{T},1}, bases::Array{Complex{T}, 1}, amplitudes::Array{Complex{T}, 1}) where T
+        exponents::Array{Complex{T},1} = log.(bases) * (length(x_array)-1)/(x_array[end]-x_array[1])
+        new{T}(p, x_array, y_array, bases, amplitudes, exponents)
+    end
 end
 
 struct PronyMethod end
@@ -50,18 +39,6 @@ function (fit::DampedCosineFit{T})(x::T) where T
     result = zero(T)
     for i = 1:round(Int64,fit.p)
         result += (fit.amplitudes[i] * fit.bases[i]^indx)
-    end
-    return result
-end
-
-function (fit::ComplexExponentialFit{T})(x::T) where T
-    xmin = fit.x_array[1]
-    xmax = fit.x_array[end]
-    N = length(fit.x_array)
-    indx = (x-xmin)
-    result = zero(T)
-    for i = 1:round(Int64,fit.p)
-        result += (fit.amplitudes[i] * exp(fit.exponents[i]*indx))
     end
     return result
 end
@@ -150,7 +127,7 @@ function find_bases(y, p, ::PronyMethod)
 end
 
 # Prony method with length(x) exponentials
-function prony(x::AbstractVector, y::AbstractVector, ::PronyMethod; exponentialMode = false)
+function prony(x::AbstractVector, y::AbstractVector, ::PronyMethod)
     if isodd(length(x))
         pop!(x)
         pop!(y)
@@ -159,14 +136,11 @@ function prony(x::AbstractVector, y::AbstractVector, ::PronyMethod; exponentialM
     check_args(x, y, p)
     bases = find_bases(y, p, PronyMethod())
     amplitudes = find_amplitudes(bases, y, PronyMethod())
-
-    exponentialMode ?
-        (return exponentialVersion(DampedCosineFit(p, x, Complex.(y), bases, amplitudes))) :
-        (return DampedCosineFit(p, x, Complex.(y), bases, amplitudes))
+    return DampedCosineFit(p, x, Complex.(y), bases, amplitudes)
 end
 
 # Prony method with M exponentials
-function prony(x::AbstractVector, y::AbstractVector, M::Int64, m::ApproximatePronyMethod; exponentialMode = false)
+function prony(x::AbstractVector, y::AbstractVector, M::Int64, m::ApproximatePronyMethod)
     if isodd(length(x))
         pop!(x)
         pop!(y)
@@ -189,26 +163,24 @@ function prony(x::AbstractVector, y::AbstractVector, M::Int64, m::ApproximatePro
     bases = bases[sortedindx]
     amplitudes = amplitudes[sortedindx]
 
-    exponentialMode ? 
-        (return exponentialVersion(DampedCosineFit(length(bases), x, Complex.(y), bases, amplitudes))) :
-        (return DampedCosineFit(length(bases), x, Complex.(y), bases, amplitudes))
+    return DampedCosineFit(length(bases), x, Complex.(y), bases, amplitudes)
 end
 
 
-function prony(x::AbstractVector, y::AbstractVector, N::Int64; decay=false, exponentialMode = false)
-    return prony(x, y, N, ApproximatePronyMethod(decay); exponentialMode = exponentialMode)
+function prony(x::AbstractVector, y::AbstractVector, N::Int64; decay=false)
+    return prony(x, y, N, ApproximatePronyMethod(decay))
 end
 
-function prony(x::AbstractRange, y::AbstractVector, N::Int64; decay=false, exponentialMode = false)
-    return prony(collect(x), y, N, ApproximatePronyMethod(decay); exponentialMode = exponentialMode)
+function prony(x::AbstractRange, y::AbstractVector, N::Int64; decay=false)
+    return prony(collect(x), y, N, ApproximatePronyMethod(decay))
 end
 
-function prony(x::AbstractVector, y::AbstractVector; exponentialMode = false)
-    return prony(x, y, PronyMethod(); exponentialMode = exponentialMode)
+function prony(x::AbstractVector, y::AbstractVector)
+    return prony(x, y, PronyMethod())
 end
 
-function prony(x::AbstractRange, y::AbstractVector; exponentialMode = false)
-    return prony(collect(x), y, PronyMethod(); exponentialMode = exponentialMode)
+function prony(x::AbstractRange, y::AbstractVector)
+    return prony(collect(x), y, PronyMethod())
 end
 
 end # module
